@@ -81,8 +81,10 @@ def fc_layer(x, num_units, name, use_relu=True):
     with tf.variable_scope(name):
         in_dim = x.get_shape()[1]
         W = weight_variable(shape=[in_dim, num_units])
+        variable_summaries(W)
         tf.summary.histogram('weight', W)
         b = bias_variable(shape=[num_units])
+        variable_summaries(b)
         tf.summary.histogram('bias', b)
         layer = tf.matmul(x, W)
         layer += b
@@ -105,8 +107,10 @@ def conv_layer(x, filter_size, num_filters, stride, name):
         num_in_channel = x.get_shape().as_list()[-1]
         shape = [filter_size, filter_size, num_in_channel, num_filters]
         W = weight_variable(shape=shape)
+        variable_summaries(W)
         tf.summary.histogram('weight', W)
         b = bias_variable(shape=[num_filters])
+        variable_summaries(b)
         tf.summary.histogram('bias', b)
         layer = tf.nn.conv2d(x, W, strides=[1, stride, stride, 1],padding="SAME")
         layer += b
@@ -151,7 +155,7 @@ def variable_summaries(x):
 
 
 def main():
-    logs_path = "./logs/write_summaries"  # path to the folder that we want to save the logs for TensorBoard
+    logs_path = "./logs"  # path to the folder that we want to save the logs for TensorBoard
     img_h = img_w = 28  # MNIST images are 28x28
     img_size_flat = img_h * img_w  # 28x28=784, the total number of pixels
     n_classes = 10  # Number of classes, one class per digit
@@ -164,7 +168,7 @@ def main():
     lr_0 = 0.001  # The optimization initial learning rate
     epochs = 5  # Total number of training epochs
     batch_size = 50  # Training batch size
-    display_freq = 100
+    display_freq = 1000
 
     # Network Configuration
     # 1st Convolutional Layer
@@ -235,14 +239,15 @@ def main():
                     if iteration % display_freq == 0:
                         # Calculate and display the batch loss and accuracy
                         loss_batch, acc_batch, summary_tr = sess.run([loss, accuracy, merged], feed_dict=feed_dict_batch)
-                        variable_summaries(conv1)
-                        variable_summaries(pool1)
-                        variable_summaries(conv2)
-                        variable_summaries(pool2)
-                        variable_summaries(layer_flat)
-                        variable_summaries(dropped)
-                        variable_summaries(output_logits)
                         summary_writer.add_summary(summary_tr, global_step)
+                        # variable_summaries(conv1)
+                        # variable_summaries(pool1)
+                        # variable_summaries(conv2)
+                        # variable_summaries(pool2)
+                        # variable_summaries(layer_flat)
+                        # variable_summaries(dropped)
+                        # variable_summaries(output_logits)
+
                         print("iter {0:3d}:\t Loss={1:.2f},\tTraining Accuracy={2:.01%}".format(iteration, loss_batch, acc_batch))
                 # Run validation after every epoch
                 feed_dict_valid = {x: x_valid, y: y_valid}

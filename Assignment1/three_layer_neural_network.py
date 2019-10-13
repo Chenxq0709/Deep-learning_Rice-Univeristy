@@ -10,8 +10,8 @@ class NeuralNetwork(DeepNeuralNetwork):
 
 
 def main():
-    Noise_samples = [[0.00, '00'], [.025, '01'], [.075, '02']]
-    Activation_fun = [['ReLU', 'relu', '00'], ['sigmoid', 'sigmoid', '01'], ['hyperbolic tangent', 'tanh', '02']]
+    Noise_samples = [[0.025, '00'], [.050, '01'], [.10, '02']]
+    Activation_fun = [['ReLU', 'relu', '00'], ['sigmoid', 'sigmoid', '01'], ['hyperbolic tangent', 'tanh', '02'],['parametric relu', 'prelu', '03'], ['exponential linear unites', 'elu', '04']]
     Data_maker = [['00', lambda x: datasets.make_moons(n_samples = 1000, shuffle = True, noise = x, random_state = None)], ['01', lambda x: datasets.make_circles(n_samples = 1000, shuffle = True, noise = x, random_state = None, factor = 0.75)]]
     N_hidden = [[10, '00'], [20, '01'], [30, '02']]
 
@@ -26,7 +26,7 @@ def main():
                     y = np.array([[i == 0, i == 1] for i in y]).T
                     # Network
                     network = NeuralNetwork(input_dim = 2, hidden_dim = l[0], output_dim = 2, activation_type = j[1], regularization =0, random_seed = None)
-                    network.train(X, y, .1, 100000, True, .2)
+                    network.train(X, y, j[3], 100000, True, .2)
                     # Display
                     x_min, x_max = X.T[:, 0].min() - .5, X.T[:, 0].max() + .5
                     y_min, y_max = X.T[:, 1].min() - .5, X.T[:, 1].max() + .5
