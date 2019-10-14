@@ -3,11 +3,7 @@ import numpy as np
 from tensorflow.examples.tutorials.mnist import input_data
 
 def load_data(mode='train'):
-    """
-    Function to (download and) load the MNIST data
-    :param mode: train or test
-    :return: images and the corresponding labels
-    """
+
     mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
     if mode == 'train':
         x_train, y_train, x_valid, y_valid = mnist.train.images, mnist.train.labels, mnist.validation.images, mnist.validation.labels
@@ -29,12 +25,7 @@ def randomize(x, y):
 
 
 def reformat(x, y):
-    """
-    Reformats the data to the format acceptable for convolutional layers
-    :param x: input array
-    :param y: corresponding labels
-    :return: reshaped input and labels
-    """
+
     img_size, num_ch, num_class = 28, 1, 10
     dataset = x.reshape((-1, img_size, img_size, num_ch)).astype(np.float32)
     labels = (np.arange(num_class) == y[:, None]).astype(np.float32)
@@ -49,43 +40,25 @@ def get_next_batch(x, y, start, end):
 
 # weight and bais wrappers
 def weight_variable(shape):
-    """
-    Create a weight variable with appropriate initialization
-    :param name: weight name
-    :param shape: weight shape
-    :return: initialized weight variable
-    """
+
     initer = tf.truncated_normal_initializer(stddev=0.01)
-    return tf.get_variable('W',dtype=tf.float32,shape=shape,initializer=initer)
+    return tf.get_variable('W', dtype=tf.float32, shape=shape, initializer=initer)
 
 def bias_variable(shape):
-    """
-    Create a bias variable with appropriate initialization
-    :param name: bias variable name
-    :param shape: bias variable shape
-    :return: initialized bias variable
-    """
+
     initial = tf.constant(0., shape=shape, dtype=tf.float32)
-    return tf.get_variable('b',dtype=tf.float32,initializer=initial)
+    return tf.get_variable('b', dtype=tf.float32, initializer=initial)
 
 
 def fc_layer(x, num_units, name, use_relu=True):
-    """
-    Create a fully-connected layer
-    :param x: input from previous layer
-    :param num_units: number of hidden units in the fully-connected layer
-    :param name: layer name
-    :param use_relu: boolean to add ReLU non-linearity (or not)
-    :return: The output array
-    """
+
     with tf.variable_scope(name):
         in_dim = x.get_shape()[1]
         W = weight_variable(shape=[in_dim, num_units])
-        variable_summaries(W)
-        tf.summary.histogram('weight', W)
         b = bias_variable(shape=[num_units])
-        variable_summaries(b)
+        tf.summary.histogram('Weights', W)
         tf.summary.histogram('bias', b)
+
         layer = tf.matmul(x, W)
         layer += b
         if use_relu:
@@ -94,23 +67,13 @@ def fc_layer(x, num_units, name, use_relu=True):
 
 
 def conv_layer(x, filter_size, num_filters, stride, name):
-    """
-    Create a 2D convolution layer
-    :param x: input from previous layer
-    :param filter_size: size of each filter
-    :param num_filters: number of filters (or output feature maps)
-    :param stride: filter stride
-    :param name: layer name
-    :return: The output array
-    """
+
     with tf.variable_scope(name):
         num_in_channel = x.get_shape().as_list()[-1]
         shape = [filter_size, filter_size, num_in_channel, num_filters]
         W = weight_variable(shape=shape)
-        variable_summaries(W)
-        tf.summary.histogram('weight', W)
         b = bias_variable(shape=[num_filters])
-        variable_summaries(b)
+        tf.summary.histogram('Weights', W)
         tf.summary.histogram('bias', b)
         layer = tf.nn.conv2d(x, W, strides=[1, stride, stride, 1],padding="SAME")
         layer += b
@@ -118,11 +81,7 @@ def conv_layer(x, filter_size, num_filters, stride, name):
 
 
 def flatten_layer(layer):
-    """
-    Flattens the output of the convolutional layer to be fed into fully-connected layer
-    :param layer: input array
-    :return: flattened array
-    """
+
     with tf.variable_scope('Flatten_layer'):
         layer_shape = layer.get_shape()
         num_features = layer_shape[1:4].num_elements()
@@ -131,33 +90,25 @@ def flatten_layer(layer):
 
 
 def max_pool(x, ksize, stride, name):
-    """
-    Create a max pooling layer
-    :param x: input to max-pooling layer
-    :param ksize: size of the max-pooling filter
-    :param stride: stride of the max-pooling filter
-    :param name: layer name
-    :return: The output array
-    """
-    return tf.nn.max_pool(x, ksize=[1, ksize, ksize, 1], strides=[1, stride, stride, 1], padding="SAME",name=name)
+
+    return tf.nn.max_pool(x, ksize=[1, ksize, ksize, 1], strides=[1, stride, stride, 1], padding="SAME", name=name)
 
 
-def variable_summaries(x):
-    with tf.name_scope('mean'):
+def variable_summaries(x, name):
+    with tf.name_scope(name+'stat'):
         mean = tf.reduce_mean(x)
-    tf.summary.scalar('mean',tf.reduce_mean(x))
-    with tf.name_scope('std'):
+        tf.summary.scalar('mean',tf.reduce_mean(x))
         stddev = tf.sqrt(tf.reduce_mean(tf.square(x - mean)))
-    tf.summary.scalar('std', stddev)
-    tf.summary.scalar('max', tf.reduce_max(x))
-    tf.summary.scalar('min', tf.reduce_min(x))
+        tf.summary.scalar('std', stddev)
+        tf.summary.scalar('max', tf.reduce_max(x))
+        tf.summary.scalar('min', tf.reduce_min(x))
+        tf.summary.histogram('hist', x)
 
 
 
 def main():
     logs_path = "./logs"  # path to the folder that we want to save the logs for TensorBoard
     img_h = img_w = 28  # MNIST images are 28x28
-    img_size_flat = img_h * img_w  # 28x28=784, the total number of pixels
     n_classes = 10  # Number of classes, one class per digit
     n_channels = 1
 
@@ -165,7 +116,7 @@ def main():
     x_train, y_train, x_valid, y_valid = load_data(mode='train')
 
     # Hyper-parameters
-    lr_0 = 0.001  # The optimization initial learning rate
+    lr = 0.001  # The optimization initial learning rate
     epochs = 5  # Total number of training epochs
     batch_size = 50  # Training batch size
     display_freq = 1000
@@ -181,9 +132,6 @@ def main():
     num_filters2 = 64  # There are 64 of these filters.
     stride2 = 1  # The stride of the sliding window
 
-    # Fully-connected layer.
-    h1 = 150  # Number of neurons in hidden layer.
-    lr = lr_0
     # Create the network graph
     # Placeholders for inputs (x), outputs(y)
     with tf.name_scope('Input'):
@@ -210,9 +158,8 @@ def main():
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
         tf.summary.scalar('accuracy', accuracy)
 
-        # Creating the op for initializing all variables
+        # Creating the op for initializing all variables and Merge all summaries
         init = tf.global_variables_initializer()
-        # Merge all summaries
         merged = tf.summary.merge_all()
 
         # Launch the graph (session)
@@ -225,7 +172,6 @@ def main():
             for epoch in range(epochs):
                 print('Training epoch: {}'.format(epoch + 1))
                 x_train, y_train = randomize(x_train, y_train)
-                lr = lr_0 / (epoch + 1)
                 for iteration in range(num_tr_iter):
                     global_step += 1
                     start = iteration * batch_size
@@ -240,13 +186,6 @@ def main():
                         # Calculate and display the batch loss and accuracy
                         loss_batch, acc_batch, summary_tr = sess.run([loss, accuracy, merged], feed_dict=feed_dict_batch)
                         summary_writer.add_summary(summary_tr, global_step)
-                        # variable_summaries(conv1)
-                        # variable_summaries(pool1)
-                        # variable_summaries(conv2)
-                        # variable_summaries(pool2)
-                        # variable_summaries(layer_flat)
-                        # variable_summaries(dropped)
-                        # variable_summaries(output_logits)
 
                         print("iter {0:3d}:\t Loss={1:.2f},\tTraining Accuracy={2:.01%}".format(iteration, loss_batch, acc_batch))
                 # Run validation after every epoch
