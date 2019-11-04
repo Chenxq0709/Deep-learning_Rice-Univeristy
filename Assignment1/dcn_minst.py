@@ -100,7 +100,7 @@ def main():
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y), name='loss')
         tf.summary.scalar('loss', loss)
     with tf.name_scope('optimizer'):
-        optimizer = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(loss)
+        optimizer = tf.train.SGDOptimizer(learning_rate=1e-3).minimize(loss)
     with tf.name_scope('accuracy'):
         correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1), name = 'correct_preds')
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name = 'accuracy')
